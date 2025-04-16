@@ -1,11 +1,15 @@
+import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import ttk
 import tkintermapview
 from functions import *
 from algorithms import *
 
 DEPTH_LIMIT = 3  # Limite de profundidade para a pesquisa em profundidade limitada (DLS)
+
+# Configuração global do CustomTkinter: modo Dark e tema com cores vibrantes
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("blue")  # Você pode testar com "green", "blue", "dark-blue", etc.
 
 class MapApp:
     def __init__(self):
@@ -17,92 +21,104 @@ class MapApp:
         self.algorithms = ['DLS', 'A*', 'Greedy Search', 'Uniform Cost']
         self.map_view = None
 
-        self.root = tk.Tk()
-        self.root.tk.call('source', 'style/forest-light.tcl')
-        ttk.Style().theme_use('forest-light')
-        
-        # Configuração do tamanho e posicionamento da janela principal
-        window_width, window_height = 1280, 720
-        screen_width, screen_height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-        x = int((screen_width - window_width) / 2)
-        y = int((screen_height - window_height) / 2)
-        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        # Cria a janela principal usando CustomTkinter
+        self.root = ctk.CTk()
+        self.root.geometry("1280x720")
         self.root.title("Projeto IA")
-        self.root.configure(background='#DDD')
+        self.root.configure(bg="#1F1F1F")
 
-        # Criação do frame lateral para os controles
-        self.left_frame = tk.Frame(self.root, width=200, background='#DDD')
-        self.left_frame.pack(side=tk.LEFT, fill=tk.Y, ipadx=15)
+        # Criação de um frame principal com padding para simular o "container" moderno
+        self.main_frame = ctk.CTkFrame(self.root, corner_radius=15, fg_color="#2B2B2B")
+        self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Frame lateral para os controles, estilizado com corner radius e cor de fundo diferenciada
+        self.left_frame = ctk.CTkFrame(self.main_frame, width=250, corner_radius=15, fg_color="#3C3C3C")
+        self.left_frame.pack(side="left", fill="y", padx=(20,10), pady=20)
+
+        # Área central para o mapa
+        self.center_frame = ctk.CTkFrame(self.main_frame, corner_radius=15, fg_color="#2B2B2B")
+        self.center_frame.pack(side="right", fill="both", expand=True, padx=(10,20), pady=20)
 
         self._create_widgets()
 
     def _create_widgets(self):
         # Botão para selecionar o ficheiro do mapa
-        self.select_map_file_button = ttk.Button(
-            self.left_frame, text="Select Map File", command=self.select_map_file, width=20, style='Accent.TButton'
+        self.select_map_file_button = ctk.CTkButton(
+            self.left_frame, text="Select Map File",
+            command=self.select_map_file,
+            width=200, corner_radius=10
         )
-        self.select_map_file_button.pack(pady=(20, 0))
+        self.select_map_file_button.pack(pady=(20, 10))
 
         # Combobox para a cidade de partida
-        self.start_city_label = tk.Label(self.left_frame, text="Start City:", width=20, background='#DDD')
+        self.start_city_label = ctk.CTkLabel(self.left_frame, text="Start City:")
         self.start_city_label.pack(pady=(10, 0))
-        self.start_city_combobox = ttk.Combobox(
-            self.left_frame, values=['Select map first'], width=20, state="disabled"
+        self.start_city_combobox = ctk.CTkComboBox(
+            self.left_frame, values=['Select map first'], width=200
         )
-        self.start_city_combobox.set(self.start_city_combobox['values'][0])
+        self.start_city_combobox.set('Select map first')
         self.start_city_combobox.bind("<<ComboboxSelected>>", self.populate_cities)
-        self.start_city_combobox.pack()
+        self.start_city_combobox.pack(pady=(5, 10))
 
         # Combobox para a cidade de destino
-        self.end_city_label = tk.Label(self.left_frame, text="End City:", width=20, background='#DDD')
+        self.end_city_label = ctk.CTkLabel(self.left_frame, text="End City:")
         self.end_city_label.pack(pady=(10, 0))
-        self.end_city_combobox = ttk.Combobox(
-            self.left_frame, values=['Select map first'], width=20, state="disabled"
+        self.end_city_combobox = ctk.CTkComboBox(
+            self.left_frame, values=['Select map first'], width=200
         )
-        self.end_city_combobox.set(self.end_city_combobox['values'][0])
+        self.end_city_combobox.set('Select map first')
         self.end_city_combobox.bind("<<ComboboxSelected>>", self.populate_cities)
-        self.end_city_combobox.pack()
+        self.end_city_combobox.pack(pady=(5, 10))
 
         # Combobox para selecionar o algoritmo de pesquisa
-        self.algorithm_label = tk.Label(self.left_frame, text="Algorithm:", width=20, background='#DDD')
+        self.algorithm_label = ctk.CTkLabel(self.left_frame, text="Algorithm:")
         self.algorithm_label.pack(pady=(10, 0))
-        self.algorithm_combobox = ttk.Combobox(
-            self.left_frame, values=self.algorithms, width=20, state="disabled"
+        self.algorithm_combobox = ctk.CTkComboBox(
+            self.left_frame, values=self.algorithms, width=200
         )
         self.algorithm_combobox.set(self.algorithms[0])
-        self.algorithm_combobox.pack()
+        self.algorithm_combobox.pack(pady=(5, 10))
 
         # Botão para calcular o percurso
-        self.calculate_route_button = ttk.Button(
-            self.left_frame, text="Calculate Route", command=self.handle_calculate_route, state="disabled", width=25
+        self.calculate_route_button = ctk.CTkButton(
+            self.left_frame, text="Calculate Route",
+            command=self.handle_calculate_route,
+            state="disabled", width=210, corner_radius=10
         )
-        self.calculate_route_button.pack(pady=(10, 0))
+        self.calculate_route_button.pack(pady=(10, 5))
 
         # Botão para adicionar marcadores e caminhos no mapa
-        self.add_markers_and_paths_button = ttk.Button(
-            self.left_frame, text="Add Markers and Paths", command=self.add_paths_to_map, state="disabled", width=25
+        self.add_markers_and_paths_button = ctk.CTkButton(
+            self.left_frame, text="Add Markers and Paths",
+            command=self.add_paths_to_map,
+            state="disabled", width=210, corner_radius=10
         )
-        self.add_markers_and_paths_button.pack(pady=(10, 0))
+        self.add_markers_and_paths_button.pack(pady=(5, 5))
 
         # Botão para limpar os marcadores e os caminhos
-        self.clear_markers_and_distances_button = ttk.Button(
-            self.left_frame, text="Clear Markers", command=self.clear_markers_and_paths, state="disabled", width=25
+        self.clear_markers_and_distances_button = ctk.CTkButton(
+            self.left_frame, text="Clear Markers",
+            command=self.clear_markers_and_paths,
+            state="disabled", width=210, corner_radius=10
         )
-        self.clear_markers_and_distances_button.pack(pady=(10, 0))
+        self.clear_markers_and_distances_button.pack(pady=(5, 15))
 
-        # Listbox para exibir o percurso calculado
-        self.path_list = tk.Listbox(self.left_frame, width=25, height=10, font=("Courier New", 10))
-        self.path_list.pack(pady=(10, 0))
+        # Caixa de texto para exibir o percurso calculado (substituindo Listbox para melhor integração visual)
+        self.path_textbox = ctk.CTkTextbox(self.left_frame, width=220, height=150, corner_radius=10)
+        self.path_textbox.configure(state="disabled")
+        self.path_textbox.pack(pady=(5, 20))
 
         # Mensagem central que indica a necessidade de selecionar um ficheiro de mapa
-        self.select_map_message = tk.Label(
-            self.root, text="Select a file to load the map.", font=("Arial", 16), foreground="#666", background="#DDD"
+        self.select_map_message = ctk.CTkLabel(
+            self.center_frame, text="Select a file to load the map.", font=("Arial", 20),
+            text_color="#CCCCCC", bg_color="transparent"
         )
-        self.select_map_message.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.select_map_message.place(relx=0.5, rely=0.5, anchor="center")
 
     def handle_calculate_route(self):
-        # Limpa a listbox e obtém as seleções efetuadas pelo utilizador
-        self.path_list.delete(0, tk.END)
+        # Limpa a caixa de texto e obtém as seleções efetuadas pelo utilizador
+        self.path_textbox.configure(state="normal")
+        self.path_textbox.delete("1.0", tk.END)
         start_city_name = self.start_city_combobox.get()
         end_city_name = self.end_city_combobox.get()
         algorithm = self.algorithm_combobox.get()
@@ -151,41 +167,42 @@ class MapApp:
                 self.map_view = self.load_map(country_location)
 
             self.clear_markers_and_paths()
-            self.populate_cities()  # Atualiza os comboboxes com as cidades
+            self.populate_cities()  # Atualiza as comboboxes com as cidades
 
             print(f"Number of cities: {len(self.cities)}")
             for city in self.cities:
                 city.printConnections()
 
             # Ativa os widgets após carregar o mapa
-            self.start_city_combobox.config(state="readonly")
-            self.end_city_combobox.config(state="readonly")
-            self.algorithm_combobox.config(state="readonly")
-            self.calculate_route_button.config(state="normal")
-            self.add_markers_and_paths_button.config(state="normal")
-            self.clear_markers_and_distances_button.config(state="normal")
+            self.start_city_combobox.configure(state="readonly")
+            self.end_city_combobox.configure(state="readonly")
+            self.algorithm_combobox.configure(state="readonly")
+            self.calculate_route_button.configure(state="normal")
+            self.add_markers_and_paths_button.configure(state="normal")
+            self.clear_markers_and_distances_button.configure(state="normal")
         except Exception as e:
             print("Error:", str(e))
 
     def populate_cities(self, event=None):
+        if not self.city_names:
+            return
         if event is None:
-            # Preenche os comboboxes com as cidades disponíveis
-            if self.city_names:
-                self.start_city_combobox['values'] = [self.city_names[0]] + self.city_names[2:]
-                self.end_city_combobox['values'] = self.city_names[1:]
-                self.start_city_combobox.set(self.city_names[0])
-                self.end_city_combobox.set(self.city_names[1])
+            self.start_city_combobox.configure(values=[self.city_names[0]] + self.city_names[2:])
+            self.end_city_combobox.configure(values=self.city_names[1:])
+            self.start_city_combobox.set(self.city_names[0])
+            self.end_city_combobox.set(self.city_names[1])
         else:
-            # Atualiza as opções para evitar a seleção duplicada
             widget = event.widget
             if widget == self.start_city_combobox:
-                self.end_city_combobox['values'] = [city for city in self.city_names if city != self.start_city_combobox.get()]
+                self.end_city_combobox.configure(values=[city for city in self.city_names if city != self.start_city_combobox.get()])
             elif widget == self.end_city_combobox:
-                self.start_city_combobox['values'] = [city for city in self.city_names if city != self.end_city_combobox.get()]
+                self.start_city_combobox.configure(values=[city for city in self.city_names if city != self.end_city_combobox.get()])
 
     def clear_markers_and_paths(self):
-        # Remove todos os marcadores e caminhos do mapa e limpa a listbox
-        self.path_list.delete(0, tk.END)
+        # Remove todos os marcadores e caminhos do mapa e limpa a caixa de texto
+        self.path_textbox.configure(state="normal")
+        self.path_textbox.delete("1.0", tk.END)
+        self.path_textbox.configure(state="disabled")
         if self.map_view:
             self.map_view.delete_all_marker()
             self.map_view.delete_all_path()
@@ -204,26 +221,24 @@ class MapApp:
             path, cost = path_cost
             cost.insert(0, 0)  # Insere custo zero no início
             total_cost = sum(map(int, cost))
-            print(f"Route: {path_cost}")
-            print(f"Total Cost: {total_cost}")
-
+            output = f"Total Cost: {total_cost}\nRoute:\n"
             previous_city_location = None
-            # Itera por cada cidade no percurso e atualiza a listbox e o mapa
             for city in path:
                 accumulated_cost = sum(map(int, cost[:path.index(city) + 1]))
-                spaces = " " * (22 - len(city))
-                self.path_list.insert(tk.END, f"{city}{spaces}{accumulated_cost}")
+                output += f"{city:22} {accumulated_cost}\n"
                 location = getGeolocation(city, self.cached_locations)
                 self.map_view.set_marker(location[0], location[1], city)
                 if previous_city_location:
                     self.map_view.set_path([previous_city_location, (location[0], location[1])])
                 previous_city_location = (location[0], location[1])
+            self.path_textbox.configure(state="normal")
+            self.path_textbox.insert("1.0", output)
+            self.path_textbox.configure(state="disabled")
 
     def add_paths_to_map(self):
         if self.map_view:
             self.map_view.delete_all_path()
             self.add_markers_to_all_locations()
-            # Adiciona caminhos entre as cidades com base nas ligações definidas
             for city in self.cities:
                 for connection_data in city.getConnections():
                     connection_city = next(c for c in self.cities if c.getName() == connection_data['name'])
@@ -231,9 +246,9 @@ class MapApp:
                     self.map_view.set_path(path)
 
     def load_map(self, country_location):
-        # Oculta a mensagem de seleção e inicializa o widget do mapa
+        # Oculta a mensagem de seleção e inicializa o widget do mapa na área central
         self.select_map_message.place_forget()
-        map_view = tkintermapview.TkinterMapView(self.root, width=1000, height=700)
+        map_view = tkintermapview.TkinterMapView(self.center_frame, width=800, height=700)
         map_view.set_position(country_location[0], country_location[1])
         map_view.set_zoom(7)
         map_view.pack(fill=tk.BOTH, expand=True)
@@ -241,7 +256,6 @@ class MapApp:
 
     def run(self):
         self.root.mainloop()
-
 
 if __name__ == '__main__':
     app = MapApp()
